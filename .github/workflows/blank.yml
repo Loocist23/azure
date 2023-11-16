@@ -24,10 +24,12 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-    - name: Install dependencies
+    - name: Install azure-cli
       run: |
         python -m pip install --upgrade pip
         pip install azure-cli
+    - name: Install Terraform
+      run: |
         sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
         wget -O- https://apt.releases.hashicorp.com/gpg | \
         gpg --dearmor | \
@@ -40,6 +42,20 @@ jobs:
         sudo tee /etc/apt/sources.list.d/hashicorp.list
         sudo apt update
         sudo apt-get install terraform
+    - name: Install Helm
+      run: |
+        curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+        sudo apt-get install apt-transport-https --yes
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+        sudo apt-get update
+        sudo apt-get install helm
+    - name: Install Kubectl
+      run: |    
+        sudo apt-get update && sudo apt-get install -y apt-transport-https
+        curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+        echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+        sudo apt-get update
+        sudo apt-get install -y kubectl
     - name: Login via Azure CLI
       run: |
         az login --tenant ${{ secrets.AZURE_TENANT_ID }} -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }}
@@ -61,3 +77,12 @@ jobs:
     - name: Terraform Apply
       run: |
         terraform apply -auto-approve
+
+    - name: Install NGINX on Kubernetes
+      run: |
+        helm repo add nginx-stable https://helm.nginx.com/stable
+        helm repo update
+        export KUBECONFIG=.kube/config
+        helm init --kube-context CONTEXT_NAME --upgrade
+        helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true
+        helm upgrade nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
