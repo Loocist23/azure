@@ -85,3 +85,9 @@ jobs:
         export KUBECONFIG=.kube/config
         helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true
         helm upgrade nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
+
+    - name: Install Redis on Kubernetes
+      run: |
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
+        helm install redis bitnami/redis --set usePassword=false
