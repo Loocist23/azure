@@ -88,5 +88,5 @@ jobs:
 
     - name: Install Redis on Kubernetes
       run: |
-        helm repo add bitnami https://charts.bitnami.com/bitnami
-        helm install my-redis bitnami/redis --version 18.3.3
+      helm repo add bitnami https://charts.bitnami.com/bitnami
+      helm install my-redis bitnami/redis --version 18.3.3
