@@ -28,6 +28,28 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install azure-cli
+        sudo apt-get update && sudo apt-get install -y gnupg software-properties-common
+        wget -O- https://apt.releases.hashicorp.com/gpg | \
+        gpg --dearmor | \
+        sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+        gpg --no-default-keyring \
+        --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg \
+        --fingerprint
+        echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] \
+        https://apt.releases.hashicorp.com $(lsb_release -cs) main" | \
+        sudo tee /etc/apt/sources.list.d/hashicorp.list
+        sudo apt update
+        sudo apt-get install terraform
     - name: Login via Azure CLI
       run: |
         az login --tenant ${{ secrets.AZURE_TENANT_ID }} -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }}
+    - name: Terraform Init
+      run: |
+        terraform init
+    - name: Terraform Plan
+      run: |
+        terraform plan
+    - name: Terraform Apply
+      run: |
+        terraform apply -auto-approve
+        
