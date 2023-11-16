@@ -31,4 +31,5 @@ jobs:
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
       - name: Login to Azure
-        run: az login --tenant ${{ secrets.AZURE_TENANT_ID }} -u ${{ secrets.AZURE_USERNAME}} -p ${{ secrets.AZURE_PASSWORD }}
+        run: |
+         az login --tenant ${{ secrets.AZURE_TENANT_ID }} -u ${{ secrets.AZURE_USERNAME}} -p ${{ secrets.AZURE_PASSWORD }}
