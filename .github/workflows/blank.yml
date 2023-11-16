@@ -83,6 +83,5 @@ jobs:
         helm repo add nginx-stable https://helm.nginx.com/stable
         helm repo update
         export KUBECONFIG=.kube/config
-        helm init --kube-context CONTEXT_NAME --upgrade
         helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true
         helm upgrade nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
