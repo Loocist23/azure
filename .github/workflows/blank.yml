@@ -48,10 +48,16 @@ jobs:
         terraform init
     - name: Terraform Plan
       run: |
-        terraform plan
+        terraform plan  
+    - name : humanvalidation 
+      uses: trstringer/manual-approval@v1
+      with:
+          secret: ${{ secrets.TOKEN }}
+          approvers: ${{ secrets.APPROVER }}
+          minimum-approvals: 1
+          issue-title: "Mais qui est le plus beau ?"
+          issue-body: "C'est moi ! (ecrit 'yes' pour approuver)"
+          exclude-workflow-initiator-as-approver: false
     - name: Terraform Apply
-      if: github.event.comment.body == 'apply'
       run: |
-        terraform apply
-
-
+        terraform apply -auto-approve
