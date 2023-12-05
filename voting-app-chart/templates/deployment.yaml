@@ -19,14 +19,7 @@ spec:
       {{- end }}
       labels:
         {{- include "voting-app-chart.labels" . | nindent 8 }}
-	{{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       serviceAccountName: {{ include "voting-app-chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
@@ -40,17 +33,15 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}  
+          env:
+            - name: REDIS
+              value: {{ .Values.redis.host }}:{{ .Values.redis.port }}
+            - name: REDIS_PWD
+              value: "plop"
           {{- with .Values.volumeMounts }}
+
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
