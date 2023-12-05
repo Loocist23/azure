@@ -62,10 +62,9 @@ resource "helm_release" "redis" {
   version          = "v17.9.2"
 
   set {
-    name  = "global.redis.password"
-    value = "plop"
+    name  = "usePassword"
+    value = "false"
   }
-
   set {
     name  = "replica.replicaCount"
     value = 1
