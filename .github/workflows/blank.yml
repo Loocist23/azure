@@ -65,29 +65,6 @@ jobs:
     - name: Terraform Plan
       run: |
         terraform plan  
-    - name : humanvalidation 
-      uses: trstringer/manual-approval@v1
-      with:
-          secret: ${{ secrets.TOKEN }}
-          approvers: ${{ secrets.APPROVER }}
-          minimum-approvals: 1
-          issue-title: "Mais qui est le plus beau ?"
-          issue-body: "C'est moi ! (ecrit 'yes' pour approuver)"
-          exclude-workflow-initiator-as-approver: false
     - name: Terraform Apply
       run: |
         terraform apply -auto-approve
-
-    - name: Install NGINX on Kubernetes
-      run: |
-        helm repo add nginx-stable https://helm.nginx.com/stable
-        helm repo update
-        export KUBECONFIG=.kube/config
-        helm install nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true
-        helm upgrade nginx-ingress nginx-stable/nginx-ingress --set rbac.create=true --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz
-
-    - name: Install Redis on Kubernetes
-      run: |
-        helm repo add bitnami https://charts.bitnami.com/bitnami
-        helm repo update
-        helm install redis bitnami/redis --set usePassword=false
