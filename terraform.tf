@@ -1,44 +1,78 @@
-# Create a resource group
-resource "azurerm_resource_group" "example" {
-  name     = "example-resources"
-  location = "West Europe"
+resource "azurerm_resource_group" "rg" {
+  name     = "rg"
+  location = "France Central"
 }
 
-# Create a virtual network within the resource group
-resource "azurerm_virtual_network" "example_network" {
-  name                = "example-network"
-  resource_group_name = azurerm_resource_group.example.name
-  location            = azurerm_resource_group.example.location
+resource "azurerm_virtual_network" "vnet" {
+  name                = "vnet"
   address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 }
 
-# Create a subnet within the virtual network
-resource "azurerm_subnet" "exemple_subnet" {
-  name                 = "exemple_subnet"
-  resource_group_name  = azurerm_resource_group.example.name
-  virtual_network_name = azurerm_virtual_network.example_network.name
-  address_prefixes     = ["10.0.1.0/24"]  
+resource "azurerm_subnet" "subnet" {
+  name                 = "subnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.1.0/24"]
 }
 
-resource "azurerm_kubernetes_cluster" "exemple_cluster" {
-    
-        name                = "exemple_cluster"
-        location            = azurerm_resource_group.example.location
-        resource_group_name = azurerm_resource_group.example.name
-        dns_prefix          = "exemple"
-        
-        default_node_pool {
-            name            = "default"
-            node_count      = 1
-            vm_size         = "Standard_D2_v2"
-        }
+resource "azurerm_kubernetes_cluster" "aks" {
+  name                = "aks"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  dns_prefix          = "exampleaks1"
 
-        identity {
-            type = "SystemAssigned"
-        }
+  default_node_pool {
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_D2_v2"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 resource "local_file" "kube_config" {
-    filename = ".kube/config"
-    content = azurerm_kubernetes_cluster.exemple_cluster.kube_config_raw
+  content  = azurerm_kubernetes_cluster.aks.kube_config_raw
+  filename = ".kube/config"
+}
+
+resource "helm_release" "nginx_ingress" {
+  name             = "nginx-ingress-controller"
+  namespace        = "nginx-ingress-controller"
+  create_namespace = true
+  repository       = "https://charts.bitnami.com/bitnami"
+  chart            = "nginx-ingress-controller"
+  version          = "9.4.1"
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks,
+    local_file.kube_config
+  ]
+}
+
+resource "helm_release" "redis" {
+  name             = "redis"
+  namespace        = "redis"
+  create_namespace = true
+  repository       = "https://charts.bitnami.com/bitnami"
+  chart            = "redis"
+  version          = "v17.9.2"
+
+  set {
+    name  = "global.redis.password"
+    value = "plop"
+  }
+
+  set {
+    name  = "replica.replicaCount"
+    value = 1
+  }
+
+  depends_on = [
+    azurerm_kubernetes_cluster.aks,
+    local_file.kube_config
+  ]
 }
