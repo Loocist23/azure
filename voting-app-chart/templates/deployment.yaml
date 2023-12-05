@@ -38,8 +38,6 @@ spec:
           env:
             - name: REDIS
               value: {{ .Values.redis.host }}:{{ .Values.redis.port }}
-            - name: REDIS_PWD
-              value: "plop"
           {{- with .Values.volumeMounts }}
 
           volumeMounts:
